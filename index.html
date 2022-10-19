@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Insignia Tech Test</title>
+    <script src="https://metawidget.sourceforge.net/js/4.2/metawidget-core.min.js"></script>
+    <script>
+
+        let init = () => {
+
+
+            let parentDefault = {
+
+                name: "",
+                age: 0,
+                type: [
+                    "Mother",
+                    "Father",
+                    "Partner"
+                ]
+
+            };
+
+            let addNewParent = function() {
+
+                let newDiv = document.createElement('div');
+
+                let mw = new metawidget.Metawidget(newDiv);
+                mw.toInspect(parentDefault);
+                mw.buildWidgets();
+
+            };
+
+
+        };
+
+        document.addEventListener("DOMContentLoaded", init);
+
+    </script>
+</head>
+<body>
+    <h2>Insignia Tech Test</h2>
+    <h3>By Jack Williams</h3>
+    <h4>Github Link Here</h4>
+<hr>
+<p>
+    Describe your family!
+</p>
+<p>Please enter the parents and all children in your family.</p>
+<div>
+
+    <div id="parents_catcher">
+
+    </div>
+
+    <div>
+        <div>
+
+        </div>
+        <div id="children_catcher">
+
+        </div>
+    </div>
+
+
+</div>
+</body>
+</html>
