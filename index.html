@@ -2,38 +2,280 @@
 <html lang="en">
 <head>
     <title>Insignia Tech Test</title>
+    <style>
+        .person {
+
+            margin-bottom: 10px
+
+        }
+
+        .big {
+
+            font-size: 20px;
+
+        }
+
+    </style>
     <script src="https://metawidget.sourceforge.net/js/4.2/metawidget-core.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
     <script>
 
+        /*
+        Just a helper function to build a dropdown for me
+         */
+        let buildParentsDropdown = () => {
+
+            let dropdown = document.createElement("select");
+            dropdown.id = "type";
+
+            let mum = document.createElement("option");
+            mum.innerHTML = 'Mother';
+            mum.value = "Mother";
+
+            let dad = document.createElement("option");
+            dad.innerHTML = 'Father';
+            dad.value = "Father";
+
+            let partner = document.createElement("option");
+            partner.innerHTML = 'Partner';
+            partner.value = "Partner";
+
+            let guardian = document.createElement("option");
+            guardian.innerHTML = 'Guardian';
+            guardian.value = "Guardian";
+
+            dropdown.appendChild(mum);
+            dropdown.appendChild(dad);
+            dropdown.appendChild(partner);
+            dropdown.appendChild(guardian);
+
+            return dropdown;
+
+        };
+
+
+        //Will run when the document is ready
         let init = () => {
 
+            //Load references to our buttons
+            let parentCatcher = document.getElementById("parents_catcher");
+            let kidsCatcher = document.getElementById("children_catcher");
+            let addParentButton = document.getElementById("add_parent");
+            let addChildButton = document.getElementById("add_child");
 
-            let parentDefault = {
+            //The default shape of a parent, for metawidgit
+            const parentDefault = {
 
-                name: "",
+                name: "Name",
                 age: 0,
-                type: [
-                    "Mother",
-                    "Father",
-                    "Partner"
-                ]
+                type: "Mother"
 
             };
 
-            let addNewParent = function() {
+            //initialise some lists, we'll put our family members in here later
+            let listOfParents = [];
+            let listOfKids = [];
+
+            //A helper function to disable the "add parent" button, so that there's
+            // only two parents.
+            let checkAddParentDisplay = () => {
+
+                let existing = document.getElementsByName('parent');
+                console.log(existing);
+
+                if (existing && existing.length >= 2){
+
+                    addParentButton.setAttribute("disabled", "true");
+
+                }
+                else {
+                    addParentButton.removeAttribute("disabled");
+                }
+
+            };
+
+            //Delete a parent, then update the add parent button
+            let deleteParent = parentRef => {
+
+                for (let i = listOfParents.length-1; i >= 0; i--){
+
+                    let wid = listOfParents[i];
+
+                    if (wid === parentRef){
+                        let div = wid.div;
+                        div.parentNode.removeChild(div);
+                        listOfParents.splice(i, 1);
+                        break;
+                    }
+
+                }
+
+                checkAddParentDisplay();
+
+            };
+
+            //Add a new parent by creating a placeholder element,
+            //and using metawidget to generate a parent using
+            //the form described earlier.
+            let addNewParent = () => {
 
                 let newDiv = document.createElement('div');
+                parentCatcher.appendChild(newDiv);
+                newDiv.className = 'person';
+
+
+                newDiv.setAttribute('name', 'parent');
+                newDiv.appendChild(buildParentsDropdown()); //I don't know how/if metawidget understands how to automatically make a combo box, so I'm, doing it manually.
 
                 let mw = new metawidget.Metawidget(newDiv);
-                mw.toInspect(parentDefault);
+                mw.toInspect = parentDefault;
                 mw.buildWidgets();
 
+                mw.div = newDiv;
+
+                listOfParents.push(mw);
+
+                let deleteThis = function() {
+
+                    deleteParent(mw);
+
+                };
+
+                //I don't know how/if metwidget understands how to automagically add action buttons to widgets, so I'm doing it manually.
+                let deleteButton = document.createElement("button");
+                deleteButton.onclick = deleteThis;
+                deleteButton.innerHTML = "Delete";
+                deleteButton.setAttribute("name", "Delete_Button");
+                newDiv.appendChild(deleteButton);
+
+                checkAddParentDisplay();
+
             };
+
+
+            addParentButton.onclick = addNewParent; //bind
+
+            addNewParent(); //Always start with one parent
+
+            //The default shape of children
+            const childDefault = {
+
+                name: "Name",
+                age: 0
+
+            };
+
+            let deleteKid = kidRef => {
+
+                for (let i = listOfKids.length-1; i >= 0; i--){
+
+                    let wid = listOfKids[i];
+
+                    if (wid === kidRef){
+                        let div = wid.div;
+                        div.parentNode.removeChild(div);
+                        listOfKids.splice(i, 1);
+                        break;
+                    }
+
+                }
+
+            };
+
+            //Add a new child by creating a placeholder element,
+            //and using metawidget to generate a child using
+            //the form described earlier.
+
+            let addNewKid = () => {
+
+                let newDiv = document.createElement('div');
+                kidsCatcher.appendChild(newDiv);
+                newDiv.className = 'person';
+
+                newDiv.setAttribute('name', 'kid');
+
+                let mw = new metawidget.Metawidget(newDiv);
+                mw.toInspect = childDefault;
+                mw.buildWidgets();
+
+                mw.div = newDiv;
+
+                listOfKids.push(mw);
+
+                let deleteThis = function() {
+
+                    deleteKid(mw);
+
+                };
+                //I don't know how/if metwidget understands how to automagically add action buttons to widgets, so I'm doing it manually.
+                let deleteButton = document.createElement("button");
+                deleteButton.onclick = deleteThis;
+                deleteButton.innerHTML = "Delete";
+                deleteButton.setAttribute("name", "Delete_Button");
+                newDiv.appendChild(deleteButton);
+
+            };
+
+            addChildButton.onclick = addNewKid; //bind
+
+            //Builds an object and posts it to the server for saving
+            let save = () => {
+
+                console.log("saving");
+
+                let saveObject =  {
+                    type: "family",
+                    parents: [],
+                    children: []
+                };
+
+                //Do parents
+                for (let i = 0; i < listOfParents.length; i++){
+                    let parentmw = listOfParents[i];
+                    console.log(parentmw);
+                    parentmw.save();
+                    let parent = parentmw.toInspect;
+
+                    saveObject.parents.push(parent);
+                }
+
+                //Do children
+                for (let i = 0; i < listOfKids.length; i++){
+                    let parentmw = listOfKids[i];
+                    console.log(parentmw);
+                    parentmw.save();
+                    let parent = parentmw.toInspect;
+
+                    saveObject.children.push(parent);
+                }
+
+                console.log(saveObject);
+
+                //Post
+                $.ajax({
+                    "type": "POST",
+                    success: () => {
+                        //todo: tell the user that this worked as expected
+                        console.log("Family saved");
+                    },
+                    error: () => {
+                        //todo: tell the user this failed
+                        console.error("Family NOT saved!")
+                    },
+                    data: JSON.stringify(saveObject),
+                    contentType: "application/json",
+                    url: "/save"
+                });
+
+            };
+
+            document.getElementById("save1").onclick=save; //bind
+            document.getElementById("save2").onclick=save; //bind
 
 
         };
 
-        document.addEventListener("DOMContentLoaded", init);
+        document.addEventListener("DOMContentLoaded", init); //bind
 
     </script>
 </head>
@@ -48,19 +290,34 @@
 <p>Please enter the parents and all children in your family.</p>
 <div>
 
-    <div id="parents_catcher">
-
+    <div>
+        <button id="save1" class="big">Save</button>
     </div>
 
     <div>
+        <h2>Parents/Guardians</h2>
         <div>
+            <button id="add_parent">Add</button>
+        </div>
+        <div id="parents_catcher">
 
+        </div>
+    </div>
+
+
+    <div style="padding-left:30px">
+        <h2>Children/Dependants</h2>
+        <div>
+            <button id="add_child">Add</button>
         </div>
         <div id="children_catcher">
 
         </div>
     </div>
 
+    <div>
+        <button id="save2" class="big">Save</button>
+    </div>
 
 </div>
 </body>
